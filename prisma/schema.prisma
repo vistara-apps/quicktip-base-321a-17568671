@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId           String    @id @default(uuid())
+  farcasterId      String?
+  baseWalletAddress String
+  createdAt        DateTime  @default(now())
+  sentTips         TipTransaction[] @relation("SenderUser")
+  receivedTips     TipTransaction[] @relation("ReceiverUser")
+
+  @@index([baseWalletAddress])
+}
+
+model TipTransaction {
+  transactionId    String    @id @default(uuid())
+  senderAddress    String
+  receiverAddress  String
+  amountUSD        Float
+  amountUSDC       String
+  status           String    @default("pending") // pending, success, failed
+  transactionHash  String?
+  timestamp        DateTime  @default(now())
+  feeAmount        Float     @default(0)
+  senderUserId     String?
+  receiverUserId   String?
+  sender           User?     @relation("SenderUser", fields: [senderUserId], references: [userId])
+  receiver         User?     @relation("ReceiverUser", fields: [receiverUserId], references: [userId])
+
+  @@index([senderAddress])
+  @@index([receiverAddress])
+  @@index([status])
+  @@index([transactionHash])
+  @@index([senderUserId])
+  @@index([receiverUserId])
+}
+
